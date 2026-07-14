@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Gemini API",
+        "description": "Enter your Gemini API key to enable text-to-speech with Matilda's voice. Get your API key at [{api_key_url}]({api_key_url}).",
+        "data": {
+          "api_key": "API Key",
+          "chat_model": "TTS Model",
+          "temperature": "Temperature",
+          "tts_prompt": "Director's Prompt (voice character)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Gemini API. Check your API key."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  }
+}
