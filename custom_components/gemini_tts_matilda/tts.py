@@ -125,7 +125,7 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
         to give Gemini consistent voice character for Matilda.
         """
         config = types.GenerateContentConfig()
-        config.temperature = self.config_entry.data.get(
+        config.temperature = self.config_entry.options.get(
             CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
         )
         config.response_modalities = ["AUDIO"]
@@ -138,7 +138,9 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
         )
 
         # === KEY MODIFICATION: inject Director's Prompt before message ===
-        prompt = options.get(CONF_TTS_PROMPT, RECOMMENDED_TTS_PROMPT)
+        prompt = options.get(CONF_TTS_PROMPT) or self.config_entry.options.get(
+            CONF_TTS_PROMPT, RECOMMENDED_TTS_PROMPT
+        )
         full_message = prompt + "\n" + message if prompt else message
 
         def _extract_audio_parts(
@@ -168,7 +170,7 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
 
         try:
             response = await self._genai_client.aio.models.generate_content(
-                model=self.config_entry.data.get(
+                model=self.config_entry.options.get(
                     CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL
                 ),
                 contents=full_message,

@@ -4,7 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
@@ -12,7 +12,6 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TTS_PROMPT,
     DEFAULT_TITLE,
-    DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_TTS_MODEL,
@@ -33,25 +32,23 @@ class GeminiTTSMatildaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                # Validate the API key by doing a quick test
                 from google import genai
 
                 client = genai.Client(api_key=user_input["api_key"])
                 await client.aio.models.list()
 
-                # Create entry with the TTS prompt
                 return self.async_create_entry(
                     title=DEFAULT_TITLE,
                     data={
                         "api_key": user_input["api_key"],
+                    },
+                    options={
                         CONF_CHAT_MODEL: user_input.get(
                             CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL
                         ),
                         CONF_TEMPERATURE: user_input.get(
                             CONF_TEMPERATURE, 1.0
                         ),
-                    },
-                    options={
                         CONF_TTS_PROMPT: user_input.get(
                             CONF_TTS_PROMPT, RECOMMENDED_TTS_PROMPT
                         ),
@@ -79,4 +76,51 @@ class GeminiTTSMatildaConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "api_key_url": "https://aistudio.google.com/app/apikey"
             },
+        )
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
+        """Return the options flow handler."""
+        return GeminiTTSMatildaOptionsFlow()
+
+
+class GeminiTTSMatildaOptionsFlow(OptionsFlow):
+    """Handle options flow for Gemini TTS Matilda."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",
+                data=user_input,
+            )
+
+        current = self.config_entry.options
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_CHAT_MODEL,
+                        default=current.get(
+                            CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL
+                        ),
+                    ): str,
+                    vol.Optional(
+                        CONF_TEMPERATURE,
+                        default=current.get(CONF_TEMPERATURE, 1.0),
+                    ): vol.Coerce(float),
+                    vol.Optional(
+                        CONF_TTS_PROMPT,
+                        default=current.get(
+                            CONF_TTS_PROMPT, RECOMMENDED_TTS_PROMPT
+                        ),
+                    ): str,
+                }
+            ),
+            description_placeholders={},
         )
