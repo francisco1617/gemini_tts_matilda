@@ -78,6 +78,49 @@ class GeminiTTSMatildaConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication (API key change)."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth with new API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                from google import genai
+
+                client = genai.Client(api_key=user_input["api_key"])
+                await client.aio.models.list()
+
+                # Update the existing entry's data with the new API key
+                entry = self._get_reauth_entry()
+                self.hass.config_entries.async_update_entry(
+                    entry, data={"api_key": user_input["api_key"]}
+                )
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reauth_successful")
+            except Exception as exc:
+                LOGGER.error("API key validation failed: %s", exc)
+                errors["base"] = "cannot_connect"
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("api_key"): str,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "api_key_url": "https://aistudio.google.com/app/apikey"
+            },
+        )
+
     @staticmethod
     def async_get_options_flow(
         config_entry: ConfigEntry,
@@ -94,6 +137,14 @@ class GeminiTTSMatildaOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            # If a new API key was provided, update the entry data too
+            new_key = user_input.pop("api_key", "").strip()
+            if new_key:
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={"api_key": new_key},
+                )
+
             return self.async_create_entry(
                 title="",
                 data=user_input,
@@ -104,6 +155,10 @@ class GeminiTTSMatildaOptionsFlow(OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
+                    vol.Optional(
+                        "api_key",
+                        default="",
+                    ): str,
                     vol.Optional(
                         CONF_CHAT_MODEL,
                         default=current.get(
