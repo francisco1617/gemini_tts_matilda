@@ -99,6 +99,15 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
             model=RECOMMENDED_TTS_MODEL.split("/")[-1],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        self._last_prompt_preview = ""
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return additional state attributes for diagnostics."""
+        return {
+            "prompt_active": bool(self._last_prompt_preview),
+            "prompt_preview": self._last_prompt_preview,
+        }
 
     @callback
     @override
@@ -142,6 +151,18 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
             CONF_TTS_PROMPT, RECOMMENDED_TTS_PROMPT
         )
         full_message = prompt + "\n" + message if prompt else message
+
+        # Log para verificar que el prompt se inyectó
+        if prompt:
+            preview = prompt.strip().split("\n")[0][:60]
+            self._last_prompt_preview = preview
+            LOGGER.info(
+                "TTS con Director's Prompt: %s | texto: %s",
+                preview, message[:50],
+            )
+        else:
+            self._last_prompt_preview = ""
+            LOGGER.warning("TTS sin Director's Prompt — solo texto crudo: %s", message[:50])
 
         def _extract_audio_parts(
             response: types.GenerateContentResponse,
