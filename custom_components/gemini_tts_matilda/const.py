@@ -18,11 +18,9 @@ RECOMMENDED_TEMPERATURE = 1.0
 CONF_TTS_PROMPT = "tts_prompt"
 RECOMMENDED_TTS_PROMPT = """# AUDIO PROFILE: Matilda — pequeña hada de batalla mexicana
 
-Tono y Timbre: Extremadamente agudo (soprano), dulce, suave y con un ligero toque de aire (voz aspirada).
-
-Cadencia y Ritmo: Fluctuante, melódica y propensa a alargamientos en las vocales, siempre está emocionada.
-
-Intención/Actitud: Inocente, asombrada, extremadamente juguetona. Siempre suena como si estuviera lista para pelear o a la defensiva.
+Tono: soprano agudo, dulce, suave, con aire aspirado.
+Cadencia: fluctuante, melódica, vocales alargadas, siempre emocionada.
+Actitud: inocente, asombrada, juguetona, siempre lista para pelear.
 
 #### TRANSCRIPT
 """
