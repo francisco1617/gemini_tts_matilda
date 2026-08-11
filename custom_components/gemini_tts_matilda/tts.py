@@ -200,7 +200,9 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
 
             data, mime_type = _extract_audio_parts(response)
         except (APIError, ClientError, ValueError, TypeError) as exc:
-            LOGGER.error("Error during TTS: %s", exc, exc_info=True)
-            raise HomeAssistantError(exc) from exc
+            LOGGER.warning(
+                "Gemini no generó audio para '%s': %s", message[:50], exc
+            )
+            return None
 
         return "wav", convert_to_wav(data, mime_type)
