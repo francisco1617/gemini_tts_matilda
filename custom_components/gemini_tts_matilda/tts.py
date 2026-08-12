@@ -203,6 +203,9 @@ class MatildaTTSEntity(TextToSpeechEntity, Entity):
             LOGGER.warning(
                 "Gemini no generó audio para '%s': %s", message[:50], exc
             )
-            return None
+            # Retornar WAV de silencio (0.3s) para que HA complete el ciclo
+            # y LVA no se quede colgado en "responding"
+            silence = b'\x00' * 14400  # 0.3s @ 24kHz 16-bit mono
+            return "wav", convert_to_wav(silence, "audio/L16;rate=24000")
 
         return "wav", convert_to_wav(data, mime_type)
